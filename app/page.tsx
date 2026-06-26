@@ -1,3 +1,5 @@
+import CareerChat from "./components/career-chat";
+
 const capabilities = [
   "Respuesta ante incidentes",
   "SIEM y correlación de eventos",
@@ -82,6 +84,7 @@ export default function Home() {
           <div className="navlinks">
             <a href="#trayectoria">Trayectoria</a>
             <a href="#capacidades">Capacidades</a>
+            <a href="#gemelo-ia">Gemelo IA</a>
             <a href="https://github.com/pabloios" target="_blank" rel="noreferrer">
               GitHub
             </a>
@@ -218,6 +221,8 @@ export default function Home() {
           ))}
         </ul>
       </section>
+
+      <CareerChat />
 
       <section className="closing">
         <div>

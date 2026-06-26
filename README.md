@@ -4,6 +4,12 @@ Professional portfolio built with Next.js for cybersecurity, SOC analyst, automa
 
 ## Local Development
 
+Create a `.env` file with:
+
+```bash
+OPENROUTER_API_KEY=your_openrouter_key
+```
+
 ```bash
 npm install
 npm run dev
@@ -21,3 +27,7 @@ npm run start
 ## Content Sources
 
 The site content is based on `Profile.pdf` and `Pablo_Sarmiento_CV_ES.pdf`.
+
+## AI Career Chat
+
+The digital-twin chat uses OpenRouter with the `openai/gpt-oss-120b` model through the server-side `/api/chat` route.
