@@ -1,6 +1,8 @@
 "use client";
 
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { EASE_OUT } from "./motion-primitives";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -8,9 +10,9 @@ type ChatMessage = {
 };
 
 const quickQuestions = [
-  "¿Cuál es el perfil profesional de Pablo?",
-  "¿Qué experiencia tiene en ciberseguridad?",
-  "¿Por qué puede aportar en un equipo SOC?"
+  "¿Qué soluciones empresariales desarrolla Pablo?",
+  "¿Qué experiencia tiene en IA y automatización?",
+  "¿Por qué puede aportar en ciberseguridad?"
 ];
 
 export default function CareerChat() {
@@ -18,15 +20,25 @@ export default function CareerChat() {
     {
       role: "assistant",
       content:
-        "Soy el gemelo digital profesional de Pablo. Puedo responder sobre su carrera, experiencia, habilidades, formación y encaje para roles junior de ciberseguridad, SOC, automatización y agentic engineering."
+        "Soy el gemelo digital profesional de Pablo. Puedo responder sobre su carrera, proyectos, software empresarial, soluciones IA, automatización, formación y enfoque en ciberseguridad."
     }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
 
   const canSubmit = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading]);
+
+  useEffect(() => {
+    const node = messagesRef.current;
+
+    if (node) {
+      node.scrollTo({ top: node.scrollHeight, behavior: reduced ? "auto" : "smooth" });
+    }
+  }, [messages, isLoading, reduced]);
 
   async function submitQuestion(question: string) {
     const trimmed = question.trim();
@@ -81,15 +93,33 @@ export default function CareerChat() {
   return (
     <section className="chatSection" id="gemelo-ia" aria-labelledby="chat-title">
       <div className="chatIntro">
-        <p className="kicker">Gemelo digital</p>
-        <h2 id="chat-title">Pregúntale a la IA sobre mi carrera.</h2>
-        <p>
-          Este chat usa OpenRouter y responde con contexto de mi CV, LinkedIn y trayectoria
-          profesional. Está pensado para reclutadores, líderes técnicos y equipos de seguridad.
-        </p>
+        <motion.h2
+          id="chat-title"
+          initial={reduced ? false : { opacity: 0, y: 28, filter: "blur(8px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.85, ease: EASE_OUT }}
+        >
+          Un gemelo IA para explorar mi perfil.
+        </motion.h2>
+        <motion.p
+          initial={reduced ? false : { opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.85, delay: 0.12, ease: EASE_OUT }}
+        >
+          Este chat responde con contexto de mi trayectoria, capacidades técnicas y proyectos. Está
+          pensado para reclutadores, líderes técnicos, equipos de producto y áreas de seguridad.
+        </motion.p>
       </div>
 
-      <div className="chatShell">
+      <motion.div
+        className="chatShell"
+        initial={reduced ? false : { opacity: 0, y: 56, scale: 0.97, filter: "blur(10px)" }}
+        whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 1, ease: EASE_OUT }}
+      >
         <div className="chatHeader">
           <div>
             <span className="statusDot" aria-hidden="true" />
@@ -99,34 +129,81 @@ export default function CareerChat() {
         </div>
 
         <div className="quickQuestions" aria-label="Preguntas sugeridas">
-          {quickQuestions.map((question) => (
-            <button
+          {quickQuestions.map((question, index) => (
+            <motion.button
               type="button"
               key={question}
               onClick={() => void submitQuestion(question)}
               disabled={isLoading}
+              initial={reduced ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 + index * 0.08, ease: EASE_OUT }}
+              whileHover={isLoading ? undefined : { y: -2 }}
+              whileTap={isLoading ? undefined : { scale: 0.95 }}
             >
               {question}
-            </button>
+            </motion.button>
           ))}
         </div>
 
-        <div className="messages" aria-live="polite" aria-label="Conversación con gemelo digital">
-          {messages.map((message, index) => (
-            <article className={`message ${message.role}`} key={`${message.role}-${index}`}>
-              <span>{message.role === "assistant" ? "Pablo AI" : "Tú"}</span>
-              <p>{message.content}</p>
-            </article>
-          ))}
-          {isLoading ? (
-            <article className="message assistant thinking">
-              <span>Pablo AI</span>
-              <p>Analizando la trayectoria profesional...</p>
-            </article>
+        <div className="messages" ref={messagesRef} aria-live="polite" aria-label="Conversación con gemelo digital">
+          <AnimatePresence initial={false}>
+            {messages.map((message, index) => (
+              <motion.article
+                className={`message ${message.role}`}
+                key={`${message.role}-${index}`}
+                initial={reduced ? false : { opacity: 0, y: 18, scale: 0.96, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                transition={{ type: "spring", stiffness: 340, damping: 30 }}
+              >
+                <span>{message.role === "assistant" ? "Pablo AI" : "Tú"}</span>
+                <p>{message.content}</p>
+              </motion.article>
+            ))}
+            {isLoading ? (
+              <motion.article
+                className="message assistant thinking"
+                key="thinking"
+                initial={reduced ? false : { opacity: 0, y: 14, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.18 } }}
+                transition={{ type: "spring", stiffness: 340, damping: 30 }}
+              >
+                <span>Pablo AI</span>
+                <p className="thinkingDots" aria-label="Generando respuesta">
+                  <motion.span
+                    animate={reduced ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.span
+                    animate={reduced ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
+                  />
+                  <motion.span
+                    animate={reduced ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+                  />
+                </p>
+              </motion.article>
+            ) : null}
+          </AnimatePresence>
+        </div>
+
+        <AnimatePresence>
+          {error ? (
+            <motion.p
+              className="chatError"
+              key="chat-error"
+              initial={reduced ? false : { opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: EASE_OUT }}
+              role="alert"
+            >
+              {error}
+            </motion.p>
           ) : null}
-        </div>
-
-        {error ? <p className="chatError">{error}</p> : null}
+        </AnimatePresence>
 
         <form className="chatForm" onSubmit={handleSubmit}>
           <label htmlFor="career-question">Pregunta sobre Pablo</label>
@@ -139,12 +216,18 @@ export default function CareerChat() {
               placeholder="Ej. ¿Qué fortalezas tiene para un rol SOC junior?"
               maxLength={320}
             />
-            <button type="submit" disabled={!canSubmit}>
+            <motion.button
+              type="submit"
+              disabled={!canSubmit}
+              whileHover={canSubmit ? { scale: 1.04 } : undefined}
+              whileTap={canSubmit ? { scale: 0.94 } : undefined}
+              transition={{ type: "spring", stiffness: 420, damping: 24 }}
+            >
               Enviar
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </section>
   );
 }

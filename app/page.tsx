@@ -1,14 +1,63 @@
 import CareerChat from "./components/career-chat";
+import HeroOrbit from "./components/hero-orbit";
+import SiteNav from "./components/site-nav";
+import {
+  FadeIn,
+  MotionLink,
+  ScrollWords,
+  Stagger
+} from "./components/motion-primitives";
 
-const capabilities = [
-  "Respuesta ante incidentes",
-  "SIEM y correlación de eventos",
-  "Análisis de logs e IOC",
-  "Scripting Python y Bash básico",
-  "QA funcional y documentación",
-  "Automatización de procesos CRM",
-  "Networking TCP/IP, DNS, HTTP",
-  "Cloud security fundamentos"
+const domains = [
+  {
+    title: "Software empresarial",
+    text:
+      "Diseño interfaces, flujos y automatizaciones para operaciones internas: CRM, control horario, QA, tableros y procesos con trazabilidad.",
+    points: ["Next.js", "React", "TypeScript", "Supabase", "Prisma", "QA funcional"]
+  },
+  {
+    title: "Soluciones IA",
+    text:
+      "Construyo asistentes, prototipos agentic y productos con modelos de lenguaje para soporte, ventas, documentación y generación de UI.",
+    points: ["OpenRouter", "Vercel AI SDK", "Anthropic", "n8n", "chatbots", "automatización"]
+  },
+  {
+    title: "Ciberseguridad",
+    text:
+      "Aplico mentalidad SOC: análisis de logs, fundamentos SIEM, respuesta ante incidentes, networking y documentación operativa.",
+    points: ["SOC junior", "SIEM", "logs", "IOC", "TCP/IP", "cloud security"]
+  }
+];
+
+const projects = [
+  {
+    name: "Agencia IA Ecuador",
+    type: "Producto IA / Automatización",
+    description:
+      "Base de servicios con Next.js, Supabase, Clerk, n8n, WhatsApp, pagos y flujos IA para productos empresariales.",
+    stack: "Next.js · Supabase · Clerk · Anthropic · n8n · Stripe"
+  },
+  {
+    name: "Chatbot Restaurante",
+    type: "Asistente comercial",
+    description:
+      "Chatbot orientado a atención, pedidos y automatización de conversaciones para negocios de comida.",
+    stack: "Next.js · TypeScript · Playwright · WhatsApp-ready"
+  },
+  {
+    name: "UI Generator",
+    type: "Herramienta agentic",
+    description:
+      "Generador de interfaces con editor, autenticación, base de datos y flujo de IA para acelerar prototipos funcionales.",
+    stack: "Next.js · Prisma · Monaco · AI SDK · Vitest"
+  },
+  {
+    name: "WorkTime Tracker",
+    type: "Software empresarial",
+    description:
+      "Aplicación de control horario y visualización operativa para registrar tiempos, revisar métricas y apoyar decisiones.",
+    stack: "Vite · Chart.js · JavaScript"
+  }
 ];
 
 const experience = [
@@ -16,227 +65,245 @@ const experience = [
     period: "2026 - Actual",
     role: "Desarrollo de Automatizaciones",
     company: "Alfanet S.A.",
-    place: "Santo Domingo, Ecuador",
     detail:
-      "Automatización de procesos en CRM, validaciones de datos de entrada e investigación para implementar herramientas de QA en Jira."
+      "Automatización de procesos CRM, validación de datos de entrada, investigación QA en Jira y mejora de flujos operativos."
   },
   {
     period: "2023 - 2025",
     role: "Operations Manager",
     company: "Empresa de Importación y Distribución",
-    place: "Melbourne",
     detail:
-      "Gestión de operaciones, supervisión de sistemas digitales, análisis de datos operativos y optimización de procesos logísticos."
+      "Gestión de operaciones, sistemas digitales, análisis de datos y optimización de procesos logísticos en Melbourne."
   },
   {
     period: "2019 - 2021",
     role: "Software Tester",
     company: "UTest",
-    place: "Remoto",
     detail:
-      "Diseño y ejecución de casos de prueba funcionales, documentación de incidencias y colaboración con desarrolladores para acelerar resoluciones."
+      "Ejecución de casos funcionales, documentación de incidencias y colaboración con equipos de desarrollo."
   },
   {
     period: "2016 - 2018",
-    role: "Asistente de Operaciones en Logistica Internacional",
+    role: "Operaciones en Logística Internacional",
     company: "Repcontver S.A.",
-    place: "Guayaquil",
     detail:
-      "Coordinación de envíos, control de inventarios en tránsito, documentación aduanera y mejora de tiempos de entrega."
+      "Coordinación de envíos, documentación aduanera, control de inventarios y seguimiento de procesos críticos."
   }
 ];
 
-const education = [
-  "Ingeniería Informática, Universidad Internacional de La Rioja",
+const credentials = [
+  "Ingeniería Informática, UNIR",
   "Advanced Diploma in Cybersecurity, Laneway Education",
   "Google Cybersecurity Professional Certificate",
   "Ingeniería en Telemática, ESPOL",
-  "Desarrollo iOS y SwiftUI"
-];
-
-const focusAreas = [
-  {
-    title: "Security Operations",
-    text:
-      "Monitoreo de amenazas, revisión de logs, detección inicial y respuesta ante incidentes con mentalidad SOC."
-  },
-  {
-    title: "Automation",
-    text:
-      "Scripts, flujos de trabajo y validaciones para reducir tareas repetitivas y mejorar trazabilidad operacional."
-  },
-  {
-    title: "Agentic Engineering",
-    text:
-      "Uso práctico de herramientas de IA para acelerar desarrollo, QA, investigación técnica y documentación."
-  }
+  "Desarrollo iOS y SwiftUI",
+  "Español nativo · Inglés C1 · Alemán B1"
 ];
 
 export default function Home() {
   return (
     <main>
       <section className="hero" aria-labelledby="intro-title">
-        <nav className="topbar" aria-label="Navegación principal">
-          <a className="brand" href="#top" aria-label="Inicio">
-            <span>PS</span>
-            <strong>Pablo Sarmiento</strong>
-          </a>
-          <div className="navlinks">
-            <a href="#trayectoria">Trayectoria</a>
-            <a href="#capacidades">Capacidades</a>
-            <a href="#gemelo-ia">Gemelo IA</a>
-            <a href="https://github.com/pabloios" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
-          </div>
-        </nav>
+        <HeroOrbit />
+        <SiteNav />
 
-        <div className="heroGrid" id="top">
+        <div className="heroStage" id="top">
           <div className="heroCopy">
-            <p className="signal">Cybersecurity Analyst | SOC Analyst Junior | Agentic Engineer</p>
-            <h1 id="intro-title">Seguridad operativa con IA y criterio empresarial.</h1>
-            <p className="lead">
-              Soy Pablo José Sarmiento Moreno, profesional de TI en Ecuador con foco en
-              ciberseguridad, monitoreo SOC, automatización de procesos y desarrollo asistido por IA.
-              Mi trayectoria combina logística, QA, datos operativos y sistemas digitales.
-            </p>
-            <div className="actions" aria-label="Acciones principales">
-              <a className="button primary" href="mailto:pablo521@hotmail.com">
-                Contactar por email
-              </a>
-              <a className="button secondary" href="/docs/Pablo_Sarmiento_CV_ES.pdf" target="_blank">
-                Ver CV
-              </a>
-              <a className="button ghost" href="https://github.com/pabloios" target="_blank" rel="noreferrer">
-                GitHub
-              </a>
-            </div>
+            <FadeIn delay={0.15}>
+              <p className="eyeline">Desarrollador de software empresarial, soluciones IA y ciberseguridad</p>
+            </FadeIn>
+            <FadeIn delay={0.25}>
+              <h1 id="intro-title">Sistemas inteligentes para operaciones que no pueden fallar.</h1>
+            </FadeIn>
+            <FadeIn delay={0.4}>
+              <p className="lead">
+                Soy Pablo José Sarmiento Moreno. Construyo software empresarial, automatizaciones,
+                asistentes IA y experiencias digitales con criterio operativo, enfoque en seguridad y
+                capacidad para convertir procesos complejos en productos claros.
+              </p>
+            </FadeIn>
+            <FadeIn delay={0.55}>
+              <div className="actions" aria-label="Acciones principales">
+                <MotionLink href="mailto:pablo521@hotmail.com">Contactar</MotionLink>
+                <MotionLink variant="secondary" href="/docs/Pablo_Sarmiento_CV_ES.pdf" target="_blank">
+                  Ver CV
+                </MotionLink>
+                <MotionLink variant="ghost" href="https://github.com/pabloios" target="_blank" rel="noreferrer">
+                  GitHub
+                </MotionLink>
+              </div>
+            </FadeIn>
           </div>
 
-          <aside className="profilePanel" aria-label="Perfil profesional">
-            <div className="portraitWrap">
-              <img src="/assets/pablo-profile.jpg" alt="Retrato profesional de Pablo José Sarmiento Moreno" />
+          <FadeIn className="heroFrameSlot" delay={0.35} y={56}>
+            <div className="motionFrame" aria-label="Resumen visual del perfil">
+              <div className="deviceChrome">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="profileScene">
+                <div className="portraitCard">
+                  <img src="/assets/pablo-profile.jpg" alt="Retrato profesional de Pablo José Sarmiento Moreno" />
+                  <div>
+                    <strong>Pablo José Sarmiento Moreno</strong>
+                    <span>Machala, Ecuador</span>
+                  </div>
+                </div>
+                <div className="signalStack" aria-hidden="true">
+                  <span>CRM automation</span>
+                  <span>AI assistants</span>
+                  <span>SOC readiness</span>
+                </div>
+                <div className="consolePanel" aria-hidden="true">
+                  <code>deploy: enterprise_workflow</code>
+                  <code>scan: logs + ioc + qa</code>
+                  <code>agent: business_ai_online</code>
+                </div>
+              </div>
             </div>
-            <div className="identity">
-              <span>Machala, Ecuador</span>
-              <strong>Pablo José Sarmiento Moreno</strong>
-              <a href="https://linkedin.com/in/pablo-jos%C3%A9-sarmiento-moreno-7041b0119" target="_blank" rel="noreferrer">
-                Perfil de LinkedIn
-              </a>
-            </div>
-            <dl className="quickStats">
-              <div>
-                <dt>Enfoque</dt>
-                <dd>SOC, SIEM, automatización</dd>
-              </div>
-              <div>
-                <dt>Idiomas</dt>
-                <dd>ES nativo, EN C1, DE B1</dd>
-              </div>
-              <div>
-                <dt>Disponibilidad</dt>
-                <dd>Roles junior y proyectos técnicos</dd>
-              </div>
-            </dl>
-          </aside>
+          </FadeIn>
+        </div>
+        <div className="scrollCue" aria-hidden="true">
+          <span />
         </div>
       </section>
 
-      <section className="about section">
-        <div className="sectionIntro">
-          <p className="kicker">Acerca de mi</p>
-          <h2>Un perfil técnico construido desde operaciones reales.</h2>
-        </div>
-        <div className="aboutBody">
-          <p>
-            Mi carrera empezó en entornos donde la precisión operativa importa: inventario,
-            logística internacional, coordinación de proveedores y seguimiento de procesos. Esa base
-            me llevó hacia QA, automatización y ciberseguridad, áreas donde la disciplina para mirar
-            detalles, documentar y responder rápido se vuelve una ventaja técnica.
-          </p>
-          <p>
-            Hoy estoy orientado a roles junior de ciberseguridad, SOC y automatización. Trabajo con
-            fundamentos de SIEM, análisis de logs, detección de amenazas, scripting, networking y
-            herramientas de IA aplicadas a investigación y desarrollo.
-          </p>
-        </div>
+      <div className="transitionDeck" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+
+      <section className="introBand" aria-label="Resumen profesional">
+        <ScrollWords text="Mi diferencial está en unir tres mundos: la disciplina de operaciones reales, el desarrollo de software moderno y la mentalidad de seguridad que exige revisar, validar y documentar." />
       </section>
 
-      <section className="focus section" id="capacidades">
-        <div className="sectionIntro wide">
-          <p className="kicker">Especialización</p>
-          <h2>Tres lineas de trabajo que se refuerzan entre si.</h2>
+      <section className="section domains" id="especialidades" aria-labelledby="domains-title">
+        <div className="sectionHeader">
+          <FadeIn>
+            <h2 id="domains-title">Tres líneas técnicas, una misma forma de resolver.</h2>
+          </FadeIn>
+          <FadeIn delay={0.15}>
+            <p>
+              Desarrollo soluciones que sirven a empresas: rápidas de usar, bien estructuradas y listas
+              para crecer con procesos, datos e IA.
+            </p>
+          </FadeIn>
         </div>
-        <div className="focusGrid">
-          {focusAreas.map((area) => (
-            <article className="focusItem" key={area.title}>
-              <h3>{area.title}</h3>
-              <p>{area.text}</p>
+        <Stagger className="domainGrid" step={0.14}>
+          {domains.map((domain) => (
+            <article className="domainPanel" key={domain.title}>
+              <h3>{domain.title}</h3>
+              <p>{domain.text}</p>
+              <ul>
+                {domain.points.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
             </article>
           ))}
-        </div>
+        </Stagger>
       </section>
 
-      <section className="section split" id="trayectoria">
-        <div className="sectionIntro sticky">
-          <p className="kicker">Trayectoria profesional</p>
-          <h2>De procesos críticos a sistemas, seguridad y automatización.</h2>
+      <section className="showcase" id="proyectos" aria-labelledby="projects-title">
+        <div className="sectionHeader">
+          <FadeIn>
+            <h2 id="projects-title">Proyectos y laboratorios de trabajo.</h2>
+          </FadeIn>
+          <FadeIn delay={0.15}>
+            <p>
+              Una selección desde mis carpetas locales y repositorios: productos IA, herramientas
+              empresariales, automatizaciones y prototipos con intención de producto.
+            </p>
+          </FadeIn>
+        </div>
+        <Stagger className="projectRail" step={0.12} y={44}>
+          {projects.map((project, index) => (
+            <article className="projectCard" key={project.name}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <p>{project.type}</p>
+              <h3>{project.name}</h3>
+              <p>{project.description}</p>
+              <small>{project.stack}</small>
+            </article>
+          ))}
+        </Stagger>
+      </section>
+
+      <section className="section narrative" id="trayectoria">
+        <div className="stickyCopy">
+          <FadeIn>
+            <h2>Experiencia construida en procesos donde el detalle importa.</h2>
+            <p>
+              Antes del código hubo operaciones, logística, QA y mejora continua. Esa base me permite
+              pensar el software como una herramienta para reducir fricción, controlar riesgo y dar
+              visibilidad al negocio.
+            </p>
+          </FadeIn>
         </div>
         <div className="timeline">
           {experience.map((item) => (
-            <article className="timelineItem" key={`${item.company}-${item.period}`}>
-              <time>{item.period}</time>
-              <div>
-                <h3>{item.role}</h3>
-                <p className="company">
-                  {item.company} · {item.place}
-                </p>
-                <p>{item.detail}</p>
-              </div>
-            </article>
+            <FadeIn key={`${item.company}-${item.period}`} y={40} amount={0.35}>
+              <article className="timelineItem">
+                <time>{item.period}</time>
+                <div>
+                  <h3>{item.role}</h3>
+                  <p className="company">{item.company}</p>
+                  <p>{item.detail}</p>
+                </div>
+              </article>
+            </FadeIn>
           ))}
         </div>
       </section>
 
-      <section className="section credentials">
+      <section className="learning" aria-labelledby="learning-title">
         <div>
-          <p className="kicker">Base técnica</p>
-          <h2>Capacidades listas para un entorno de seguridad moderno.</h2>
+          <FadeIn>
+            <h2 id="learning-title">Formación técnica y aprendizaje continuo.</h2>
+            <p>
+              Una base académica y práctica orientada a ingeniería, ciberseguridad, QA, cloud y
+              productos digitales modernos.
+            </p>
+          </FadeIn>
         </div>
-        <div className="skillCloud" aria-label="Habilidades tecnicas">
-          {capabilities.map((skill) => (
-            <span key={skill}>{skill}</span>
+        <Stagger as="ul" itemAs="li" className="educationList" step={0.09} y={24}>
+          {credentials.map((item) => (
+            <span key={item} className="educationItem">
+              {item}
+            </span>
           ))}
-        </div>
-      </section>
-
-      <section className="section learning">
-        <div className="sectionIntro">
-          <p className="kicker">Formacion</p>
-          <h2>Aprendizaje continuo con foco en ciberseguridad e ingeniería.</h2>
-        </div>
-        <ul className="educationList">
-          {education.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+        </Stagger>
       </section>
 
       <CareerChat />
 
       <section className="closing">
         <div>
-          <p className="signal">Disponible para conversaciones tecnicas</p>
-          <h2>Busco aportar en equipos que necesiten seguridad, automatización y criterio operativo.</h2>
+          <FadeIn>
+            <h2>Hablemos de software, IA o seguridad con impacto real.</h2>
+          </FadeIn>
+          <FadeIn delay={0.15}>
+            <p>
+              Estoy disponible para roles, colaboraciones y proyectos donde haga falta construir con
+              velocidad, claridad técnica y responsabilidad operativa.
+            </p>
+          </FadeIn>
         </div>
-        <div className="closingActions">
-          <a className="button primary" href="mailto:pablo521@hotmail.com">
-            Escribir a Pablo
-          </a>
-          <a className="button secondary" href="https://github.com/pabloios" target="_blank" rel="noreferrer">
-            Revisar GitHub
-          </a>
-        </div>
+        <FadeIn delay={0.25}>
+          <div className="closingActions">
+            <MotionLink href="mailto:pablo521@hotmail.com">Escribir a Pablo</MotionLink>
+            <MotionLink
+              variant="secondary"
+              href="https://linkedin.com/in/pablo-jos%C3%A9-sarmiento-moreno-7041b0119"
+              target="_blank"
+              rel="noreferrer"
+            >
+              LinkedIn
+            </MotionLink>
+          </div>
+        </FadeIn>
       </section>
     </main>
   );

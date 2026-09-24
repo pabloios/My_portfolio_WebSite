@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pablo José Sarmiento Moreno | Cybersecurity & Agentic Engineering",
+  title: "Pablo Sarmiento | Software Empresarial, IA y Ciberseguridad",
   description:
-    "Portfolio profesional de Pablo José Sarmiento Moreno, perfil junior en ciberseguridad, SOC, automatización y agentic engineering.",
+    "Portfolio de Pablo José Sarmiento Moreno: desarrollador de software empresarial, soluciones IA, automatización y ciberseguridad.",
   openGraph: {
-    title: "Pablo José Sarmiento Moreno",
+    title: "Pablo Sarmiento | Software Empresarial, IA y Ciberseguridad",
     description:
-      "Cybersecurity Analyst, SOC Analyst Junior, Agentic Engineer y Programador Junior.",
+      "Desarrollo de software empresarial, asistentes IA, automatización, QA y enfoque SOC/ciberseguridad.",
     type: "website"
   }
 };
