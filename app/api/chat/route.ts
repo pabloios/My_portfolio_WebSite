@@ -7,6 +7,10 @@ type IncomingMessage = {
 
 const MODEL = "openai/gpt-oss-120b";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const REQUEST_TIMEOUT_MS = 30_000;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 8;
+const MAX_MESSAGES_PER_CONVERSATION = 8;
 
 const careerContext = `
 Pablo José Sarmiento Moreno es un profesional de TI ubicado en Machala, Ecuador.
@@ -42,6 +46,53 @@ No afirmes ser Pablo real; eres su gemelo digital profesional.
 Mantén respuestas de 2 a 5 párrafos cortos, o bullets si la pregunta pide comparación o resumen.
 `;
 
+// ---------------------------------------------------------------------------
+// Rate limiting en memoria (por instancia). Suficiente para un portfolio:
+// 8 preguntas por minuto y por IP protege el crédito de OpenRouter.
+// ---------------------------------------------------------------------------
+type RateBucket = { count: number; resetAt: number };
+const rateBuckets = new Map<string, RateBucket>();
+
+function getClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfterSeconds: number } {
+  const now = Date.now();
+
+  // Limpieza perezosa cuando el mapa crece demasiado.
+  if (rateBuckets.size > 500) {
+    for (const [key, bucket] of rateBuckets) {
+      if (bucket.resetAt <= now) {
+        rateBuckets.delete(key);
+      }
+    }
+  }
+
+  const bucket = rateBuckets.get(ip);
+
+  if (!bucket || bucket.resetAt <= now) {
+    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+
+  if (bucket.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.ceil((bucket.resetAt - now) / 1000)
+    };
+  }
+
+  bucket.count += 1;
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
 function isValidMessage(message: unknown): message is IncomingMessage {
   if (!message || typeof message !== "object") {
     return false;
@@ -67,6 +118,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const ip = getClientIp(request);
+  const limit = checkRateLimit(ip);
+
+  if (!limit.allowed) {
+    return NextResponse.json(
+      {
+        error: `Demasiadas preguntas seguidas. Inténtalo de nuevo en ${limit.retryAfterSeconds} segundos.`
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limit.retryAfterSeconds) }
+      }
+    );
+  }
+
   let payload: unknown;
 
   try {
@@ -81,19 +147,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "La conversación es requerida." }, { status: 400 });
   }
 
-  const messages = rawMessages.filter(isValidMessage).slice(-8);
+  const messages = rawMessages.filter(isValidMessage).slice(-MAX_MESSAGES_PER_CONVERSATION);
 
   if (!messages.some((message) => message.role === "user")) {
     return NextResponse.json({ error: "Escribe una pregunta para Pablo AI." }, { status: 400 });
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   try {
-    const response = await fetch(OPENROUTER_URL, {
+    const siteOrigin =
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      request.headers.get("origin") ??
+      "http://localhost:3000";
+
+    const upstream = await fetch(OPENROUTER_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
+        "HTTP-Referer": siteOrigin,
         "X-Title": "Pablo Sarmiento Portfolio"
       },
       body: JSON.stringify({
@@ -104,35 +178,107 @@ export async function POST(request: NextRequest) {
           ...messages
         ],
         max_completion_tokens: 520,
-        temperature: 0.45
-      })
+        temperature: 0.45,
+        stream: true
+      }),
+      signal: controller.signal
     });
 
-    const data = await response.json();
+    if (!upstream.ok || !upstream.body) {
+      const data = (await upstream.json().catch(() => null)) as {
+        error?: { message?: string };
+      } | null;
 
-    if (!response.ok) {
       const message =
         typeof data?.error?.message === "string"
           ? data.error.message
           : "OpenRouter no pudo procesar la respuesta.";
 
-      return NextResponse.json({ error: message }, { status: response.status });
+      clearTimeout(timeout);
+      return NextResponse.json({ error: message }, { status: upstream.ok ? 502 : upstream.status });
     }
 
-    const content = data?.choices?.[0]?.message?.content;
+    // Traduce el SSE de OpenRouter a un stream de texto plano.
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+    const upstreamBody = upstream.body;
+    let buffer = "";
 
-    if (typeof content !== "string" || !content.trim()) {
-      return NextResponse.json(
-        { error: "OpenRouter respondió sin contenido." },
-        { status: 502 }
-      );
-    }
+    const textStream = new ReadableStream<Uint8Array>({
+      async start(streamController) {
+        const reader = upstreamBody.getReader();
 
-    return NextResponse.json({ message: content.trim() });
-  } catch {
+        try {
+          for (;;) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              break;
+            }
+
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split("\n");
+            buffer = lines.pop() ?? "";
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+
+              if (!trimmed.startsWith("data:")) {
+                continue;
+              }
+
+              const data = trimmed.slice(5).trim();
+
+              if (!data || data === "[DONE]") {
+                continue;
+              }
+
+              try {
+                const parsed = JSON.parse(data) as {
+                  choices?: Array<{ delta?: { content?: string } }>;
+                };
+                const delta = parsed.choices?.[0]?.delta?.content;
+
+                if (typeof delta === "string" && delta) {
+                  streamController.enqueue(encoder.encode(delta));
+                }
+              } catch {
+                // Fragmento incompleto o inválido: se ignora.
+              }
+            }
+          }
+        } finally {
+          clearTimeout(timeout);
+          reader.releaseLock();
+          streamController.close();
+        }
+      },
+      cancel() {
+        clearTimeout(timeout);
+        void upstreamBody.cancel().catch(() => undefined);
+      }
+    });
+
+    return new Response(textStream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff"
+      }
+    });
+  } catch (caughtError) {
+    clearTimeout(timeout);
+
+    const aborted = caughtError instanceof Error && caughtError.name === "AbortError";
+
     return NextResponse.json(
-      { error: "No se pudo conectar con OpenRouter." },
-      { status: 502 }
+      {
+        error: aborted
+          ? "La respuesta tardó demasiado. Inténtalo de nuevo."
+          : "No se pudo conectar con OpenRouter."
+      },
+      { status: aborted ? 504 : 502 }
     );
   }
 }

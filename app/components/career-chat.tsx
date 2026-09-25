@@ -47,8 +47,8 @@ export default function CareerChat() {
       return;
     }
 
-    const nextMessages: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
-    setMessages(nextMessages);
+    const history: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
+    setMessages([...history, { role: "assistant", content: "" }]);
     setInput("");
     setError("");
     setIsLoading(true);
@@ -56,24 +56,63 @@ export default function CareerChat() {
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          messages: nextMessages.slice(-8)
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history.slice(-8) })
       });
 
-      const data = (await response.json()) as { message?: string; error?: string };
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
 
-      const assistantMessage = data.message;
-
-      if (!response.ok || !assistantMessage) {
-        throw new Error(data.error || "No se pudo obtener una respuesta.");
+        throw new Error(data?.error || "No se pudo obtener una respuesta.");
       }
 
-      setMessages((current) => [...current, { role: "assistant", content: assistantMessage }]);
+      const reader = response.body?.getReader();
+
+      if (!reader) {
+        throw new Error("La respuesta no se pudo transmitir.");
+      }
+
+      const decoder = new TextDecoder();
+
+      for (;;) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        const chunk = decoder.decode(value, { stream: true });
+
+        if (!chunk) {
+          continue;
+        }
+
+        setMessages((current) => {
+          const next = [...current];
+          const last = next[next.length - 1];
+
+          if (last && last.role === "assistant") {
+            next[next.length - 1] = { ...last, content: last.content + chunk };
+          }
+
+          return next;
+        });
+      }
+
+      // Descarta burbujas vacías si el stream terminó sin contenido.
+      setMessages((current) =>
+        current.length > 1 && current[current.length - 1]?.content === ""
+          ? current.slice(0, -1)
+          : current
+      );
     } catch (caughtError) {
+      // Descarta la burbuja vacía antes de mostrar el error.
+      setMessages((current) =>
+        current.length > 1 && current[current.length - 1]?.content === ""
+          ? current.slice(0, -1)
+          : current
+      );
+
       setError(
         caughtError instanceof Error
           ? caughtError.message
@@ -108,8 +147,9 @@ export default function CareerChat() {
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 0.85, delay: 0.12, ease: EASE_OUT }}
         >
-          Este chat responde con contexto de mi trayectoria, capacidades técnicas y proyectos. Está
-          pensado para reclutadores, líderes técnicos, equipos de producto y áreas de seguridad.
+          Este chat responde en tiempo real con contexto de mi trayectoria, capacidades técnicas y
+          proyectos. Está pensado para reclutadores, líderes técnicos, equipos de producto y áreas de
+          seguridad.
         </motion.p>
       </div>
 
@@ -148,44 +188,43 @@ export default function CareerChat() {
 
         <div className="messages" ref={messagesRef} aria-live="polite" aria-label="Conversación con gemelo digital">
           <AnimatePresence initial={false}>
-            {messages.map((message, index) => (
-              <motion.article
-                className={`message ${message.role}`}
-                key={`${message.role}-${index}`}
-                initial={reduced ? false : { opacity: 0, y: 18, scale: 0.96, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                transition={{ type: "spring", stiffness: 340, damping: 30 }}
-              >
-                <span>{message.role === "assistant" ? "Pablo AI" : "Tú"}</span>
-                <p>{message.content}</p>
-              </motion.article>
-            ))}
-            {isLoading ? (
-              <motion.article
-                className="message assistant thinking"
-                key="thinking"
-                initial={reduced ? false : { opacity: 0, y: 14, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.18 } }}
-                transition={{ type: "spring", stiffness: 340, damping: 30 }}
-              >
-                <span>Pablo AI</span>
-                <p className="thinkingDots" aria-label="Generando respuesta">
-                  <motion.span
-                    animate={reduced ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
-                    transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  <motion.span
-                    animate={reduced ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
-                    transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
-                  />
-                  <motion.span
-                    animate={reduced ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
-                    transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-                  />
-                </p>
-              </motion.article>
-            ) : null}
+            {messages.map((message, index) => {
+              const isStreaming =
+                isLoading && message.role === "assistant" && index === messages.length - 1;
+              const isEmpty = message.content.length === 0;
+
+              return (
+                <motion.article
+                  className={`message ${message.role}`}
+                  key={`${message.role}-${index}`}
+                  initial={reduced ? false : { opacity: 0, y: 18, scale: 0.96, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                  transition={{ type: "spring", stiffness: 340, damping: 30 }}
+                >
+                  <span>{message.role === "assistant" ? "Pablo AI" : "Tú"}</span>
+                  <p>
+                    {message.content}
+                    {isStreaming ? <span className="streamCaret" aria-hidden="true" /> : null}
+                    {isStreaming && isEmpty ? (
+                      <span className="thinkingDots" aria-label="Generando respuesta">
+                        <motion.span
+                          animate={reduced ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                          transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        <motion.span
+                          animate={reduced ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                          transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
+                        />
+                        <motion.span
+                          animate={reduced ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                          transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+                        />
+                      </span>
+                    ) : null}
+                  </p>
+                </motion.article>
+              );
+            })}
           </AnimatePresence>
         </div>
 
