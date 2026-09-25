@@ -385,11 +385,19 @@ h3 {
   animation: driftLayer 7s ease-in-out infinite alternate;
 }
 
-.portraitCard img {
+.portraitCard .avatarLook {
   width: 92px;
   height: 92px;
   border-radius: 22px;
-  object-fit: cover;
+  overflow: hidden;
+  flex: none;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+}
+
+.portraitCard .avatarLook svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .portraitCard strong {
@@ -1217,7 +1225,7 @@ h3 {
     border-radius: 24px;
   }
 
-  .portraitCard img {
+  .portraitCard .avatarLook {
     width: 76px;
     height: 76px;
   }

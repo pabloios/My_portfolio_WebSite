@@ -1,6 +1,7 @@
 import CareerChat from "./components/career-chat";
 import HeroOrbit from "./components/hero-orbit";
 import SiteNav from "./components/site-nav";
+import AvatarLook from "./components/avatar-look";
 import {
   FadeIn,
   MotionLink,
@@ -145,7 +146,7 @@ export default function Home() {
               </div>
               <div className="profileScene">
                 <div className="portraitCard">
-                  <img src="/assets/pablo-profile.jpg" alt="Retrato profesional de Pablo José Sarmiento Moreno" />
+                  <AvatarLook />
                   <div>
                     <strong>Pablo José Sarmiento Moreno</strong>
                     <span>Machala, Ecuador</span>
