@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, type HTMLMotionProps, type Variants } from "motion/react";
-import type { ReactNode } from "react";
+import { motion, useReducedMotion, useScroll, useSpring, useTransform, type HTMLMotionProps, type Variants } from "motion/react";
+import { useRef, type ReactNode } from "react";
 
 /**
  * Motion primitives shared by every animated section.
@@ -59,7 +59,6 @@ type StaggerProps = {
   as?: "div" | "ul" | "ol";
   itemAs?: "div" | "li" | "article";
 };
-
 const CONTAINER_TAGS = { div: motion.div, ul: motion.ul, ol: motion.ol } as const;
 const ITEM_TAGS = { div: motion.div, li: motion.li, article: motion.article } as const;
 
@@ -81,12 +80,11 @@ export function Stagger({
   };
 
   const item: Variants = {
-    hidden: { opacity: 0, y, filter: "blur(10px)" },
+    hidden: { opacity: 0, y },
     show: {
       opacity: 1,
       y: 0,
-      filter: "blur(0px)",
-      transition: { duration: 0.85, ease: EASE_OUT }
+      transition: { duration: 0.8, ease: EASE_OUT }
     }
   };
 
@@ -100,7 +98,7 @@ export function Stagger({
       variants={variants}
       initial="hidden"
       whileInView="show"
-      viewport={{ once, amount }}
+      viewport={{ once, amount: Math.min(amount, 0.15) }}
     >
       {items.map((child, index) => (
         <Item key={index} variants={item} className="staggerItem">
@@ -108,6 +106,45 @@ export function Stagger({
         </Item>
       ))}
     </Container>
+  );
+}
+
+/**
+ * Parallax con scroll: el contenido se desplaza y desvanece suavemente
+ * mientras su sección sale del viewport (estilo product page de Apple).
+ * El wrapper externo mide la posición; solo el hijo interno se transforma.
+ */
+type ScrollDriftProps = {
+  children: ReactNode;
+  className?: string;
+  distance?: number;
+  fadeTo?: number;
+};
+
+export function ScrollDrift({
+  children,
+  className,
+  distance = 80,
+  fadeTo = 0.2
+}: ScrollDriftProps) {
+  const reduced = useReducedMotion();
+  const outerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: outerRef,
+    offset: ["start start", "end start"]
+  });
+  const rawY = useTransform(scrollYProgress, [0, 1], [0, -distance]);
+  const y = useSpring(rawY, { stiffness: 140, damping: 30, mass: 0.35 });
+  const opacity = useTransform(scrollYProgress, [0, 0.9], [1, fadeTo]);
+
+  if (reduced) {
+    return <div className={className}>{children}</div>;
+  }
+
+  return (
+    <div className={className} ref={outerRef}>
+      <motion.div style={{ y, opacity }}>{children}</motion.div>
+    </div>
   );
 }
 

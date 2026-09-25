@@ -572,6 +572,19 @@ h3 {
   border-radius: 28px;
   overflow: hidden;
   box-shadow: var(--shadow);
+  perspective: 1200px;
+}
+
+/* Los wrappers .staggerItem (Motion) son los hijos del grid: los estiramos
+   para que todas las tarjetas midan lo mismo y las líneas coincidan. */
+.domainGrid .staggerItem,
+.projectRail .staggerItem {
+  display: grid;
+}
+
+.domainGrid .staggerItem > .domainPanel,
+.projectRail .staggerItem > .projectCard {
+  height: 100%;
 }
 
 .domainPanel {
@@ -1229,10 +1242,13 @@ h3 {
     padding-bottom: 10px;
   }
 
-  .projectCard {
+  .projectRail .staggerItem {
     min-width: 82vw;
-    min-height: 410px;
     scroll-snap-align: start;
+  }
+
+  .projectCard {
+    min-height: 410px;
   }
 
   .timelineItem {

@@ -4,6 +4,7 @@ import SiteNav from "./components/site-nav";
 import {
   FadeIn,
   MotionLink,
+  ScrollDrift,
   ScrollWords,
   Stagger
 } from "./components/motion-primitives";
@@ -108,7 +109,7 @@ export default function Home() {
         <SiteNav />
 
         <div className="heroStage" id="top">
-          <div className="heroCopy">
+          <ScrollDrift className="heroCopy" distance={90} fadeTo={0.15}>
             <FadeIn delay={0.15}>
               <p className="eyeline">Desarrollador de software empresarial, soluciones IA y ciberseguridad</p>
             </FadeIn>
@@ -133,7 +134,7 @@ export default function Home() {
                 </MotionLink>
               </div>
             </FadeIn>
-          </div>
+          </ScrollDrift>
 
           <FadeIn className="heroFrameSlot" delay={0.35} y={56}>
             <div className="motionFrame" aria-label="Resumen visual del perfil">
