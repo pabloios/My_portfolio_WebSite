@@ -38,14 +38,15 @@ export default function AvatarLook() {
   const x = useSpring(rawX, { stiffness: 70, damping: 15, mass: 0.5 });
   const y = useSpring(rawY, { stiffness: 70, damping: 15, mass: 0.5 });
 
-  // 1) Parallax continuo del retrato hacia el cursor (amplitudes visibles:
-  //    el contenedor tiene 16% de sangrado, así que nunca se ven bordes).
-  const slideX = useTransform(x, (v) => v * -34);
-  const slideY = useTransform(y, (v) => v * -26);
+  // 1) El retrato se desplaza HACIA el cursor (efecto de que te mira y se
+  //    inclina a tu lado, no al opuesto).
+  const slideX = useTransform(x, (v) => v * 34);
+  const slideY = useTransform(y, (v) => v * 26);
 
-  // 2) Inclinación 3D del marco.
-  const rotateY = useTransform(x, (v) => v * 9);
-  const rotateX = useTransform(y, (v) => v * -6);
+  // 2) Inclinación 3D hacia el cursor: rotaciones invertidas respecto al
+  //    parallax de fondo para que la cara gire hacia donde está el mouse.
+  const rotateY = useTransform(x, (v) => v * -9);
+  const rotateX = useTransform(y, (v) => v * 6);
 
   const [gaze, setGaze] = useState<Gaze>("center");
 
