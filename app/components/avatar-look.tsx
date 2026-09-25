@@ -35,16 +35,17 @@ export default function AvatarLook() {
   const rawY = useMotionValue(0);
 
   // Muelles suaves: respuesta viva pero sin nerviosismo.
-  const x = useSpring(rawX, { stiffness: 60, damping: 16, mass: 0.7 });
-  const y = useSpring(rawY, { stiffness: 60, damping: 16, mass: 0.7 });
+  const x = useSpring(rawX, { stiffness: 70, damping: 15, mass: 0.5 });
+  const y = useSpring(rawY, { stiffness: 70, damping: 15, mass: 0.5 });
 
-  // 1) Parallax continuo del retrato hacia el cursor.
-  const slideX = useTransform(x, (v) => v * -16);
-  const slideY = useTransform(y, (v) => v * -12);
+  // 1) Parallax continuo del retrato hacia el cursor (amplitudes visibles:
+  //    el contenedor tiene 16% de sangrado, así que nunca se ven bordes).
+  const slideX = useTransform(x, (v) => v * -34);
+  const slideY = useTransform(y, (v) => v * -26);
 
   // 2) Inclinación 3D del marco.
-  const rotateY = useTransform(x, (v) => v * 10);
-  const rotateX = useTransform(y, (v) => v * -7);
+  const rotateY = useTransform(x, (v) => v * 9);
+  const rotateX = useTransform(y, (v) => v * -6);
 
   const [gaze, setGaze] = useState<Gaze>("center");
 
@@ -60,18 +61,18 @@ export default function AvatarLook() {
       let next = current;
 
       if (current === "center") {
-        if (nx < -0.52) {
+        if (nx < -0.38) {
           next = "left";
-        } else if (nx > 0.52) {
+        } else if (nx > 0.38) {
           next = "right";
-        } else if (ny > 0.62) {
+        } else if (ny > 0.42) {
           next = "down";
         }
       } else {
         const backToCenter =
-          (current === "left" && nx > -0.28) ||
-          (current === "right" && nx < 0.28) ||
-          (current === "down" && ny < 0.4);
+          (current === "left" && nx > -0.16) ||
+          (current === "right" && nx < 0.16) ||
+          (current === "down" && ny < 0.2);
 
         if (backToCenter) {
           next = "center";
@@ -106,9 +107,10 @@ export default function AvatarLook() {
         const rect = node.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
-        const max = Math.max(window.innerWidth, window.innerHeight) * 0.45;
-        const nx = Math.max(-1, Math.min(1, (event.clientX - cx) / max));
-        const ny = Math.max(-1, Math.min(1, (event.clientY - cy) / max));
+        // Radio fijo corto: el avatar responde con recorrer ~130px del mouse.
+        const radius = 260;
+        const nx = Math.max(-1, Math.min(1, (event.clientX - cx) / radius));
+        const ny = Math.max(-1, Math.min(1, (event.clientY - cy) / radius));
 
         rawX.set(nx);
         rawY.set(ny);
