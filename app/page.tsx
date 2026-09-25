@@ -137,32 +137,13 @@ export default function Home() {
             </FadeIn>
           </ScrollDrift>
 
-          <FadeIn className="heroFrameSlot" delay={0.35} y={56}>
-            <div className="motionFrame" aria-label="Resumen visual del perfil">
-              <div className="deviceChrome">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="profileScene">
-                <div className="portraitCard">
-                  <AvatarLook />
-                  <div>
-                    <strong>Pablo José Sarmiento Moreno</strong>
-                    <span>Machala, Ecuador</span>
-                  </div>
-                </div>
-                <div className="signalStack" aria-hidden="true">
-                  <span>CRM automation</span>
-                  <span>AI assistants</span>
-                  <span>SOC readiness</span>
-                </div>
-                <div className="consolePanel" aria-hidden="true">
-                  <code>deploy: enterprise_workflow</code>
-                  <code>scan: logs + ioc + qa</code>
-                  <code>agent: business_ai_online</code>
-                </div>
-              </div>
+          <FadeIn className="heroFrameSlot" delay={0.3} y={48}>
+            <div className="avatarStage">
+              <AvatarLook />
+              <span className="avatarLive">
+                <span className="liveDot" />
+                Gemelo IA activo — sígueme con el mouse
+              </span>
             </div>
           </FadeIn>
         </div>

@@ -11,15 +11,26 @@ import {
 } from "motion/react";
 
 /**
- * Avatar vectorial de Pablo construido con la paleta muestreada de su foto
- * real (cabello #423d40, piel #88675e, camisa #78849f). Los ojos, cejas,
- * cabeza y boca siguen el cursor con resortes; parpadea solo y, en pantallas
- * táctiles, mira alrededor de forma autónoma.
+ * Retrato vectorial de Pablo en composición grande, construido con los datos
+ * medidos de su foto real:
+ * - Paleta: cabello #423d40, piel #88675e, camisa #798bab, bigote #5c4d49.
+ * - Cabello corto y pegado: la línea superior solo cubre el centro (sienes despejadas).
+ * - Rostro ovalado: ancho máximo en pómulos (~42% del encuadre) que se afina
+ *   hacia un mentón angosto.
+ * - Bigote oscuro y cejas gruesas.
+ *
+ * Los ojos, cejas, cabeza y torso siguen el cursor con resortes; parpadea solo
+ * y, en pantallas táctiles, mira alrededor de forma autónoma.
  */
 
 const HAIR = "#423d40";
+const HAIR_LIGHT = "#544d50";
 const SKIN = "#88675e";
-const SHIRT = "#78849f";
+const SKIN_SHADOW = "#775850";
+const BROW = "#35302f";
+const STUBBLE = "#4e4442";
+const SHIRT = "#798bab";
+const SHIRT_DARK = "#63749a";
 
 export default function AvatarLook() {
   const reduced = useReducedMotion();
@@ -34,23 +45,23 @@ export default function AvatarLook() {
   const x = useSpring(rawX, spring);
   const y = useSpring(rawY, spring);
 
-  // Amplitudes: los ojos viajan más que la cabeza, la cara menos que el torso.
-  const eyeOffsetX = useTransform(x, (v) => v * 5.2);
-  const eyeOffsetY = useTransform(y, (v) => v * 3.4);
-  const pupilX = useTransform(x, (v) => v * 7.6);
-  const pupilY = useTransform(y, (v) => v * 4.6);
-  const browX = useTransform(x, (v) => v * 4.2);
-  const browY = useTransform(y, (v) => v * 2.6);
-  const headX = useTransform(x, (v) => v * 9);
-  const headY = useTransform(y, (v) => v * 5);
-  const faceX = useTransform(x, (v) => v * 3.4);
-  const faceY = useTransform(y, (v) => v * 2);
-  const smileY = useTransform(y, (v) => v * 1.6);
-  const shirtX = useTransform(x, (v) => v * 4);
-  const bodyY = useTransform(y, (v) => v * -1.5);
+  // Amplitudes para lienzo 200x200: los ojos viajan más que la cabeza.
+  const eyeX = useTransform(x, (v) => v * 8);
+  const eyeY = useTransform(y, (v) => v * 5);
+  const pupilX = useTransform(x, (v) => v * 12);
+  const pupilY = useTransform(y, (v) => v * 7);
+  const browX = useTransform(x, (v) => v * 6.5);
+  const browY = useTransform(y, (v) => v * 4);
+  const headX = useTransform(x, (v) => v * 14);
+  const headY = useTransform(y, (v) => v * 8);
+  const faceX = useTransform(x, (v) => v * 5);
+  const faceY = useTransform(y, (v) => v * 3);
+  const smileY = useTransform(y, (v) => v * 2.5);
+  const shirtX = useTransform(x, (v) => v * 7);
+  const bodyY = useTransform(y, (v) => v * -3);
 
-  // Parpadeo aleatorio: escala Y del grupo de párpados (colapsa ambos ojos
-  // hacia su propia línea central y=47).
+  // Parpadeo aleatorio: escala Y del grupo de párpados (ambos ojos a la vez,
+  // colapsan hacia su línea central y=96).
   useEffect(() => {
     if (reduced) {
       return;
@@ -62,7 +73,7 @@ export default function AvatarLook() {
     function scheduleBlink() {
       timer = window.setTimeout(() => {
         if (!cancelled && lidRef.current) {
-          animate(lidRef.current, { scaleY: [1, 0.08, 1] }, { duration: 0.22, ease: "easeInOut" });
+          animate(lidRef.current, { scaleY: [1, 0.06, 1] }, { duration: 0.22, ease: "easeInOut" });
         }
 
         scheduleBlink();
@@ -119,101 +130,112 @@ export default function AvatarLook() {
 
   return (
     <div ref={rootRef} className="avatarLook" aria-hidden="true">
-      <svg viewBox="0 0 120 120" role="presentation">
+      <svg viewBox="0 0 200 200" role="presentation">
         <defs>
           <clipPath id="avatar-clip">
-            <rect x="0" y="0" width="120" height="120" rx="26" />
+            <circle cx="100" cy="100" r="98" />
           </clipPath>
           <linearGradient id="avatar-bg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#1d2531" />
-            <stop offset="100%" stopColor="#10141c" />
+            <stop offset="0%" stopColor="#202a38" />
+            <stop offset="100%" stopColor="#0e1119" />
           </linearGradient>
-          <radialGradient id="avatar-halo" cx="0.5" cy="0.24" r="0.7">
-            <stop offset="0%" stopColor="rgba(0, 166, 214, 0.35)" />
+          <radialGradient id="avatar-halo" cx="0.5" cy="0.2" r="0.75">
+            <stop offset="0%" stopColor="rgba(0, 166, 214, 0.4)" />
             <stop offset="100%" stopColor="rgba(0, 166, 214, 0)" />
           </radialGradient>
         </defs>
 
         <g clipPath="url(#avatar-clip)">
-          <rect x="0" y="0" width="120" height="120" fill="url(#avatar-bg)" />
-          <rect x="0" y="0" width="120" height="120" fill="url(#avatar-halo)" />
+          <rect x="0" y="0" width="200" height="200" fill="url(#avatar-bg)" />
+          <rect x="0" y="0" width="200" height="200" fill="url(#avatar-halo)" />
+          <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="1.2" />
+          <circle cx="100" cy="100" r="74" fill="none" stroke="rgba(0,166,214,0.16)" strokeWidth="1.2" />
 
-          {/* Torso */}
+          {/* Torso y hombros */}
           <motion.g style={{ x: shirtX, y: bodyY }}>
-            <path d="M28 122 C28 96 44 84 60 84 C76 84 92 96 92 122 Z" fill={SHIRT} />
-            <path d="M52 86 L60 96 L68 86 C68 86 64 90 60 90 C56 90 52 86 52 86 Z" fill="#5f6c85" />
+            <path d="M28 212 C30 168 58 148 100 148 C142 148 170 168 172 212 Z" fill={SHIRT} />
+            <path d="M84 150 L100 170 L96 148 Z" fill={SHIRT_DARK} />
+            <path d="M116 150 L100 170 L104 148 Z" fill={SHIRT_DARK} />
           </motion.g>
 
           {/* Cabeza */}
           <motion.g style={{ x: headX, y: headY }}>
-            <rect x="53" y="72" width="14" height="14" rx="6" fill="#775850" />
-            <ellipse cx="34" cy="52" rx="5" ry="7" fill="#7d5c54" />
-            <ellipse cx="86" cy="52" rx="5" ry="7" fill="#7d5c54" />
+            {/* Cuello */}
+            <rect x="90" y="124" width="20" height="30" rx="9" fill={SKIN_SHADOW} />
+
+            {/* Orejas */}
+            <ellipse cx="57" cy="100" rx="7" ry="10" fill="#7d5c54" />
+            <ellipse cx="143" cy="100" rx="7" ry="10" fill="#7d5c54" />
 
             {/* Rostro */}
             <motion.g style={{ x: faceX, y: faceY }}>
-              <ellipse cx="60" cy="48" rx="26" ry="29" fill={SKIN} />
-
-              {/* Cabello */}
+              {/* Ovalo con mentón angosto (medido de la foto) */}
               <path
-                d="M32 46 C30 22 46 14 60 14 C74 14 90 22 88 46 C88 34 80 28 60 28 C40 28 32 34 32 46 Z"
+                d="M58 92 C58 58 74 46 100 46 C126 46 142 58 142 92 C142 112 126 132 100 134 C74 132 58 112 58 92 Z"
+                fill={SKIN}
+              />
+
+              {/* Sombra de barba en la mandíbula */}
+              <path
+                d="M64 104 C70 126 84 136 100 137 C116 136 130 126 136 104 C134 124 120 140 100 141 C80 140 66 124 64 104 Z"
+                fill={STUBBLE}
+                opacity="0.2"
+              />
+
+              {/* Cabello corto: cubre arriba, sienes despejadas */}
+              <path
+                d="M60 90 C58 52 76 42 100 42 C124 42 142 52 140 90 C136 66 124 58 100 58 C76 58 64 66 60 90 Z"
                 fill={HAIR}
               />
               <path
-                d="M33 40 C36 26 48 18 60 18 C72 18 84 26 87 40 C80 30 70 26 60 26 C50 26 40 30 33 40 Z"
-                fill="#524b4e"
+                d="M62 78 C68 56 80 48 100 48 C120 48 132 56 138 78 C130 62 116 56 100 56 C84 56 70 62 62 78 Z"
+                fill={HAIR_LIGHT}
               />
+              {/* Patillas cortas */}
+              <path d="M60 86 C61 96 62 100 64 104 L60 102 Z" fill={HAIR} opacity="0.85" />
+              <path d="M140 86 C139 96 138 100 136 104 L140 102 Z" fill={HAIR} opacity="0.85" />
 
-              {/* Cejas */}
+              {/* Cejas gruesas */}
               <motion.g style={{ x: browX, y: browY }}>
-                <rect x="41" y="38" width="13" height="2.6" rx="1.3" fill={HAIR} />
-                <rect x="66" y="38" width="13" height="2.6" rx="1.3" fill={HAIR} />
+                <rect x="73" y="85" width="21" height="3.6" rx="1.8" fill={BROW} transform="rotate(-4 83.5 86.8)" />
+                <rect x="106" y="85" width="21" height="3.6" rx="1.8" fill={BROW} transform="rotate(4 116.5 86.8)" />
               </motion.g>
 
               {/* Ojos */}
-              <motion.g style={{ x: eyeOffsetX, y: eyeOffsetY }}>
-                <g transform="translate(47.5 47)">
-                  <ellipse cx="0" cy="0" rx="6.4" ry="4.6" fill="#ffffff" />
-                  <motion.circle
-                    cx="0"
-                    cy="0"
-                    r="2.9"
-                    fill="#2c2624"
-                    style={{ x: pupilX, y: pupilY }}
-                  />
-                  <circle cx="1.1" cy="-1.2" r="0.9" fill="#ffffff" opacity="0.9" />
+              <motion.g style={{ x: eyeX, y: eyeY }}>
+                <g transform="translate(84 96)">
+                  <ellipse cx="0" cy="0" rx="8" ry="5.4" fill="#ffffff" />
+                  <motion.circle cx="0" cy="0" r="3.6" fill="#2c2624" style={{ x: pupilX, y: pupilY }} />
+                  <circle cx="1.4" cy="-1.4" r="1.1" fill="#ffffff" opacity="0.9" />
                 </g>
-                <g transform="translate(72.5 47)">
-                  <ellipse cx="0" cy="0" rx="6.4" ry="4.6" fill="#ffffff" />
-                  <motion.circle
-                    cx="0"
-                    cy="0"
-                    r="2.9"
-                    fill="#2c2624"
-                    style={{ x: pupilX, y: pupilY }}
-                  />
-                  <circle cx="1.1" cy="-1.2" r="0.9" fill="#ffffff" opacity="0.9" />
+                <g transform="translate(116 96)">
+                  <ellipse cx="0" cy="0" rx="8" ry="5.4" fill="#ffffff" />
+                  <motion.circle cx="0" cy="0" r="3.6" fill="#2c2624" style={{ x: pupilX, y: pupilY }} />
+                  <circle cx="1.4" cy="-1.4" r="1.1" fill="#ffffff" opacity="0.9" />
                 </g>
 
                 {/* Párpados: ambos ojos parpadean juntos */}
-                <g ref={lidRef} style={{ transformOrigin: "60px 47px" }}>
-                  <ellipse cx="47.5" cy="47" rx="7" ry="5.2" fill={SKIN} />
-                  <ellipse cx="72.5" cy="47" rx="7" ry="5.2" fill={SKIN} />
+                <g ref={lidRef} style={{ transformOrigin: "100px 96px" }}>
+                  <ellipse cx="84" cy="96" rx="8.6" ry="6" fill={SKIN} />
+                  <ellipse cx="116" cy="96" rx="8.6" ry="6" fill={SKIN} />
                 </g>
               </motion.g>
 
               {/* Nariz */}
               <path
-                d="M60 52 C58.5 56 57 58 60 58.6 C63 58 61.5 56 60 52 Z"
+                d="M100 100 C97 108 95 112 100 113.5 C105 112 103 108 100 100 Z"
                 fill="#6f5049"
                 opacity="0.85"
               />
 
+              {/* Bigote */}
+              <path d="M86 119 C92 114.5 108 114.5 114 119 C110 122.5 90 122.5 86 119 Z" fill={STUBBLE} />
+
               {/* Boca: sigue sutilmente la mirada */}
               <motion.path
-                d="M52.5 64 C56 67.4 64 67.4 67.5 64"
+                d="M91 127 C95 130.5 105 130.5 109 127"
                 stroke="#5d4038"
-                strokeWidth="2.4"
+                strokeWidth="2.6"
                 strokeLinecap="round"
                 fill="none"
                 style={{ y: smileY }}
