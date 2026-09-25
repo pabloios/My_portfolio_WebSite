@@ -10,3 +10,6 @@ yarn-error.log*
 .DS_Store
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+
+# Origen pesado del avatar IA; el sitio usa los .jpg optimizados
+public/assets/pablo-avatar-*.png
