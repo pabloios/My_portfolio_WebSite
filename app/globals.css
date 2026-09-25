@@ -1062,7 +1062,7 @@ h3 {
 
 .scrollWord {
   display: inline-block;
-  will-change: opacity, filter, transform;
+  will-change: opacity, transform;
 }
 
 .thinkingDots {

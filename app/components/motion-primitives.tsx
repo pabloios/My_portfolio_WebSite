@@ -1,6 +1,15 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useSpring, useTransform, type HTMLMotionProps, type Variants } from "motion/react";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type HTMLMotionProps,
+  type MotionValue,
+  type Variants
+} from "motion/react";
 import { useRef, type ReactNode } from "react";
 
 /**
@@ -151,55 +160,61 @@ export function ScrollDrift({
 type ScrollWordsProps = {
   text: string;
   className?: string;
-  amount?: number;
 };
 
 /**
- * Apple-style word-by-word reveal: each word lights up while the
- * statement scrolls through the viewport (scroll-linked, not timed).
+ * Apple-style scroll-linked statement: each word lights up progressively
+ * while the paragraph travels through the viewport. It is fully driven by
+ * scroll position — reversible, smooth, and never runs on its own clock.
  */
-export function ScrollWords({ text, className, amount = 0.6 }: ScrollWordsProps) {
+export function ScrollWords({ text, className }: ScrollWordsProps) {
   const reduced = useReducedMotion();
+  const ref = useRef<HTMLParagraphElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    // Empieza cuando el párrafo entra por abajo y termina cuando su borde
+    // inferior alcanza el 55% del viewport: revela durante toda la lectura.
+    offset: ["start 0.85", "end 0.55"]
+  });
+
   const words = text.split(" ");
 
   if (reduced) {
-    return (
-      <motion.p className={className} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-        {text}
-      </motion.p>
-    );
+    return <p className={className}>{text}</p>;
   }
 
-  const container: Variants = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.035 } }
-  };
+  return (
+    <p ref={ref} className={className}>
+      {words.map((word, index) => (
+        <ScrollWord
+          key={`${word}-${index}`}
+          progress={scrollYProgress}
+          range={[index / words.length, (index + 1) / words.length]}
+        >
+          {word}
+        </ScrollWord>
+      ))}
+    </p>
+  );
+}
 
-  const word: Variants = {
-    hidden: { opacity: 0.14, filter: "blur(6px)", y: 8 },
-    show: {
-      opacity: 1,
-      filter: "blur(0px)",
-      y: 0,
-      transition: { duration: 0.5, ease: EASE_OUT }
-    }
-  };
+function ScrollWord({
+  children,
+  progress,
+  range
+}: {
+  children: ReactNode;
+  progress: MotionValue<number>;
+  range: [number, number];
+}) {
+  const opacity = useTransform(progress, range, [0.12, 1]);
+  const y = useTransform(progress, range, [12, 0]);
 
   return (
-    <motion.p
-      className={className}
-      variants={container}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ amount }}
-    >
-      {words.map((item, index) => (
-        <motion.span key={`${item}-${index}`} variants={word} className="scrollWord">
-          {item}
-          {index < words.length - 1 ? "\u00A0" : ""}
-        </motion.span>
-      ))}
-    </motion.p>
+    <motion.span className="scrollWord" style={{ opacity, y }}>
+      {children}
+      {"\u00A0"}
+    </motion.span>
   );
 }
 
