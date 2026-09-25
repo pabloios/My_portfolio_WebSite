@@ -38,15 +38,11 @@ export default function AvatarLook() {
   const x = useSpring(rawX, { stiffness: 70, damping: 15, mass: 0.5 });
   const y = useSpring(rawY, { stiffness: 70, damping: 15, mass: 0.5 });
 
-  // 1) El retrato se desplaza HACIA el cursor (efecto de que te mira y se
-  //    inclina a tu lado, no al opuesto).
-  const slideX = useTransform(x, (v) => v * 34);
+  // El retrato se desplaza dentro del marco fijo: horizontal en espejo
+  // (mouse a la derecha, la cara gira a la derecha => la foto va a la
+  // izquierda) y vertical hacia el cursor.
+  const slideX = useTransform(x, (v) => v * -34);
   const slideY = useTransform(y, (v) => v * 26);
-
-  // 2) Inclinación 3D hacia el cursor: rotaciones invertidas respecto al
-  //    parallax de fondo para que la cara gire hacia donde está el mouse.
-  const rotateY = useTransform(x, (v) => v * -9);
-  const rotateX = useTransform(y, (v) => v * 6);
 
   const [gaze, setGaze] = useState<Gaze>("center");
 
@@ -163,10 +159,7 @@ export default function AvatarLook() {
 
   return (
     <div ref={rootRef} className="avatarLook" aria-hidden="true">
-      <motion.div
-        className="avatarTilt"
-        style={reduced ? undefined : { rotateX, rotateY, transformPerspective: 900 }}
-      >
+      <div className="avatarTilt">
         <div className="avatarFrame">
           <motion.div
             className="avatarSlide"
@@ -186,7 +179,7 @@ export default function AvatarLook() {
             ))}
           </motion.div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
