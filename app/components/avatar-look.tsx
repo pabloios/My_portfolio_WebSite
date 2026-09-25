@@ -4,11 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 
 /**
- * Avatar "Pablo AI" con parecido real: usa retratos generados por IA a partir
- * de la foto de Pablo (misma persona, mismo estilo) en varias direcciones de
- * mirada. El componente elige el retrato según la posición del cursor y
- * funde entre ellos con transiciones suaves; además inclina el marco hacia
- * el cursor y desliza la imagen para aproximar la mirada hacia arriba.
+ * Avatar "Pablo AI" con parecido real (retratos IA generados desde su foto).
+ *
+ * Movimiento:
+ * - Parallax continuo: todo el retrato se desliza hacia el cursor (sensación
+ *   de que te sigue) sin cambiar de imagen.
+ * - Inclinación 3D del marco (rotateX/rotateY), no giro plano.
+ * - Cambio de retrato (left/right/down) solo en zonas claras, con histéresis:
+ *   hay que salir bien de la zona para volver al centro, así no parpadea en
+ *   los bordes.
+ * - Al salir el cursor de la ventana, todo regresa suavemente al centro.
  */
 
 const AVATAR_IMAGES = {
@@ -20,46 +25,74 @@ const AVATAR_IMAGES = {
 
 type Gaze = keyof typeof AVATAR_IMAGES;
 
-function pickGaze(nx: number, ny: number): Gaze {
-  if (nx < -0.35) {
-    return "left";
-  }
-
-  if (nx > 0.35) {
-    return "right";
-  }
-
-  if (ny > 0.45) {
-    return "down";
-  }
-
-  // Mirar arriba se aproxima con parallax + retrato centrado.
-  return "center";
-}
-
 export default function AvatarLook() {
   const reduced = useReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
+  const gazeRef = useRef<Gaze>("center");
 
   // -1..1 relativo al centro del avatar.
   const rawX = useMotionValue(0);
   const rawY = useMotionValue(0);
 
-  const spring = { stiffness: 90, damping: 18, mass: 0.6 };
-  const x = useSpring(rawX, spring);
-  const y = useSpring(rawY, spring);
+  // Muelles suaves: respuesta viva pero sin nerviosismo.
+  const x = useSpring(rawX, { stiffness: 60, damping: 16, mass: 0.7 });
+  const y = useSpring(rawY, { stiffness: 60, damping: 16, mass: 0.7 });
 
-  // Inclinación del marco y deslizamiento interno para "mirar arriba".
-  const tilt = useTransform(x, (v) => v * 6);
-  const tiltY = useTransform(y, (v) => v * -4);
-  const slideY = useTransform(y, (v) => Math.min(0, v) * -14);
-  const slideX = useTransform(x, (v) => v * -10);
+  // 1) Parallax continuo del retrato hacia el cursor.
+  const slideX = useTransform(x, (v) => v * -16);
+  const slideY = useTransform(y, (v) => v * -12);
+
+  // 2) Inclinación 3D del marco.
+  const rotateY = useTransform(x, (v) => v * 10);
+  const rotateX = useTransform(y, (v) => v * -7);
 
   const [gaze, setGaze] = useState<Gaze>("center");
 
   useEffect(() => {
     if (reduced) {
       return;
+    }
+
+    // Histéresis: entra a una zona al cruzar un umbral lejano y sale en una
+    // banda amplia cerca del centro. Evita parpadeos en las fronteras.
+    function updateGaze(nx: number, ny: number) {
+      const current = gazeRef.current;
+      let next = current;
+
+      if (current === "center") {
+        if (nx < -0.52) {
+          next = "left";
+        } else if (nx > 0.52) {
+          next = "right";
+        } else if (ny > 0.62) {
+          next = "down";
+        }
+      } else {
+        const backToCenter =
+          (current === "left" && nx > -0.28) ||
+          (current === "right" && nx < 0.28) ||
+          (current === "down" && ny < 0.4);
+
+        if (backToCenter) {
+          next = "center";
+        } else if (current === "left" && nx > 0.55) {
+          next = "right";
+        } else if (current === "right" && nx < -0.55) {
+          next = "left";
+        }
+      }
+
+      if (next !== current) {
+        gazeRef.current = next;
+        setGaze(next);
+      }
+    }
+
+    function center() {
+      rawX.set(0);
+      rawY.set(0);
+      gazeRef.current = "center";
+      setGaze("center");
     }
 
     if (window.matchMedia("(pointer: fine)").matches) {
@@ -73,32 +106,36 @@ export default function AvatarLook() {
         const rect = node.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
-        const max = Math.max(window.innerWidth, window.innerHeight) * 0.5;
+        const max = Math.max(window.innerWidth, window.innerHeight) * 0.45;
         const nx = Math.max(-1, Math.min(1, (event.clientX - cx) / max));
         const ny = Math.max(-1, Math.min(1, (event.clientY - cy) / max));
 
         rawX.set(nx);
         rawY.set(ny);
-        setGaze(pickGaze(nx, ny));
+        updateGaze(nx, ny);
       }
 
       window.addEventListener("pointermove", onMove, { passive: true });
+      document.documentElement.addEventListener("pointerleave", center);
 
-      return () => window.removeEventListener("pointermove", onMove);
+      return () => {
+        window.removeEventListener("pointermove", onMove);
+        document.documentElement.removeEventListener("pointerleave", center);
+      };
     }
 
-    // Pantallas táctiles: mirada autónoma suave.
+    // Pantallas táctiles: deriva autónoma lenta.
     let drift = 0;
 
     const interval = window.setInterval(() => {
       drift += 1;
-      const nx = Math.sin(drift * 1.7) * 0.6 + Math.cos(drift * 0.6) * 0.25;
-      const ny = Math.sin(drift * 0.9) * 0.4;
+      const nx = Math.sin(drift * 1.3) * 0.45;
+      const ny = Math.sin(drift * 0.7 + 1) * 0.3;
 
       rawX.set(nx);
       rawY.set(ny);
-      setGaze(pickGaze(nx, ny));
-    }, 2200);
+      updateGaze(nx, ny);
+    }, 2600);
 
     return () => window.clearInterval(interval);
   }, [reduced, rawX, rawY]);
@@ -123,11 +160,14 @@ export default function AvatarLook() {
 
   return (
     <div ref={rootRef} className="avatarLook" aria-hidden="true">
-      <motion.div className="avatarTilt" style={{ rotateZ: reduced ? 0 : tilt, y: reduced ? 0 : tiltY }}>
+      <motion.div
+        className="avatarTilt"
+        style={reduced ? undefined : { rotateX, rotateY, transformPerspective: 900 }}
+      >
         <div className="avatarFrame">
           <motion.div
             className="avatarSlide"
-            style={{ x: reduced ? 0 : slideX, y: reduced ? 0 : slideY }}
+            style={reduced ? undefined : { x: slideX, y: slideY }}
           >
             {layers.map((layer) => (
               <motion.img
@@ -137,8 +177,8 @@ export default function AvatarLook() {
                 draggable={false}
                 className="avatarImage"
                 initial={false}
-                animate={{ opacity: layer.visible ? 1 : 0, scale: layer.visible ? 1.08 : 1.12 }}
-                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                animate={{ opacity: layer.visible ? 1 : 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
               />
             ))}
           </motion.div>

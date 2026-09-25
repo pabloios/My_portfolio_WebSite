@@ -348,7 +348,7 @@ h3 {
 
 .avatarSlide {
   position: absolute;
-  inset: 0;
+  inset: -12%;
   will-change: transform;
 }
 
@@ -359,6 +359,12 @@ h3 {
   height: 100%;
   object-fit: cover;
   user-select: none;
+}
+
+.avatarTilt {
+  width: 100%;
+  height: 100%;
+  will-change: transform;
 }
 
 .avatarLive {
